@@ -18,3 +18,4 @@ def get_text_messages(message):
     else:
         bot.send_message(message.from_user.id, 'Не понимаю, что это значит.')
 bot.polling(none_stop=True)
+
