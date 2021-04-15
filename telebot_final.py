@@ -3,21 +3,21 @@ import telebot
 from newsapi import NewsApiClient
 
 keyboardstart = telebot.types.ReplyKeyboardMarkup()
-keyboardstart.row('/Смотреть_новости_по_подпискам', '/Смотреть_новости_по_тегам', '/Добавить_тег', '/Удалить_тег', '/Выберем_новости_по_категории?', '/Отписаться_от_категории')
+keyboardstart.add('/Смотреть_новости_по_подпискам', '/Смотреть_новости_по_тегам', '/Добавить_тег', '/Удалить_тег', '/Выберем_новости_по_категории?', '/Отписаться_от_категории')
 keyboard1 = telebot.types.ReplyKeyboardMarkup()
-keyboard1.row('/Зарегестрируемся!')
+keyboard1.add('/Зарегестрируемся!')
 keyboard2 = telebot.types.ReplyKeyboardMarkup()
-keyboard2.row('/Выберем_новости_по_категории?')
+keyboard2.add('/Выберем_новости_по_категории?')
 keyboard3 = telebot.types.ReplyKeyboardMarkup()
-keyboard3.row('business', 'entertainment', 'general', 'health', 'science', 'sports', 'technology')
+keyboard3.add('business', 'entertainment', 'general', 'health', 'science', 'sports', 'technology')
 keyboard4 = telebot.types.ReplyKeyboardMarkup()
-keyboard4.row('/Смотреть_новости_по_подпискам')
+keyboard4.add('/Смотреть_новости_по_подпискам')
 keyboard5 = telebot.types.ReplyKeyboardMarkup()
-keyboard5.row('/Смотреть_новости_по_подпискам', '/Добавить_тег', '/Отписаться_от_категории')
+keyboard5.add('/Смотреть_новости_по_подпискам', '/Добавить_тег', '/Отписаться_от_категории')
 keyboard6 = telebot.types.ReplyKeyboardMarkup()
-keyboard6.row('/Смотреть_новости_по_подпискам', '/Добавить_тег', '/Отписаться_от_категории', '/Смотреть_новости_по_тегам')
+keyboard6.add('/Смотреть_новости_по_подпискам', '/Добавить_тег', '/Отписаться_от_категории', '/Смотреть_новости_по_тегам')
 keyboard7 = telebot.types.ReplyKeyboardMarkup()
-keyboard7.row('/Смотреть_новости_по_тегам', '/Добавить_тег', '/Удалить_тег')
+keyboard7.add('/Смотреть_новости_по_тегам', '/Добавить_тег', '/Удалить_тег')
 
 
 conn = sq.connect('news_users.db')
@@ -40,11 +40,13 @@ available_categories = ('business', 'entertainment', 'general', 'health', 'scien
 
 @bot.message_handler(commands=['start'])
 def send_welcome(message):
-    bot.reply_to(message, f'Привет, {message.from_user.first_name}, я новостной бот, давай зарегестрируемся и посмотрим новости!', reply_markup=keyboard1)
+    bot.reply_to(message, f'Привет, {message.from_user.first_name}, я новостной бот, давай зарегестрируемся и посмотрим'
+                          f' новости!', reply_markup=keyboard1)
 
-@bot.message_handler(conands=['help'])
+@bot.message_handler(commands=['help'])
 def send_help(message):
-    bot.reply_to(message, f'{message.from_user.first_name}, Какие то проблемы? смотри все что я умею:', reply_markup=keyboardstart)
+    bot.reply_to(message, f'{message.from_user.first_name}, Какие то проблемы? смотри все что я умею:',
+                 reply_markup=keyboardstart)
 
 @bot.message_handler(commands=['Зарегестрируемся!'])
 def register_user(message):
@@ -90,7 +92,7 @@ def news_get_by_keyword(message):
         bot.send_message(cid, f'Новости по теме: {n[0]}')
         bot.send_message(cid, '/----------------------/')
         for i in range(10):
-            bot.send_message(cid, all_articles['articles'][i]['title'])
+            bot.send_message(cid, all_articles['articles'][i]['url'])
 
 
 @bot.message_handler(commands=['Удалить_тег'])
@@ -104,7 +106,8 @@ def step_keyword_delete(message):
     keyword_text = message.text
     con = sq.connect('news_users.db')
     cur = con.cursor()
-    cur.execute('''DELETE FROM keywords WHERE user_id = (?) AND news_keywords = (?)''', (message.from_user.id, keyword_text,))
+    cur.execute('''DELETE FROM keywords WHERE user_id = (?) AND news_keywords = (?)''',
+                (message.from_user.id, keyword_text,))
     con.commit()
     con.close()
     bot.reply_to(message, 'Тег удален', reply_markup=keyboardstart)
@@ -123,7 +126,8 @@ def step_set_category(message):
     if user_category in available_categories:
         con = sq.connect('news_users.db')
         cur = con.cursor()
-        cur.execute('''INSERT INTO categories (user_id, news_categories) VALUES (?,?)''', (message.from_user.id, user_category,))
+        cur.execute('''INSERT INTO categories (user_id, news_categories) VALUES (?,?)''', (message.from_user.id,
+                                                                                           user_category,))
         con.commit()
         con.close()
         bot.reply_to(message, 'Отлично! хотите посмотреть новости по вашим подпискам?', reply_markup=keyboard4)
@@ -145,7 +149,7 @@ def news_get_by_category(message):
         bot.send_message(cid, f'Новости по категории: {n[0]}')
         bot.send_message(cid, '/----------------------/')
         for i in range(10):
-            bot.send_message(cid, all_articles['articles'][i]['title'])
+            bot.send_message(cid, all_articles['articles'][i]['url'])
         bot.reply_to(message, 'Что дальше?', reply_markup=keyboard5)
 
 @bot.message_handler(commands=['Отписаться_от_категории'])
@@ -159,7 +163,8 @@ def step_category_delete(message):
     category_text = message.text
     con = sq.connect('news_users.db')
     cur = con.cursor()
-    cur.execute('''DELETE FROM categories WHERE user_id = (?) AND news_categories = (?)''', (message.from_user.id, category_text,))
+    cur.execute('''DELETE FROM categories WHERE user_id = (?) AND news_categories = (?)''', (message.from_user.id,
+                                                                                             category_text,))
     con.commit()
     con.close()
     bot.reply_to(message, 'Вы удалили категорию подписок, что вы хотите сделать дальше?', reply_markup=keyboard5)
